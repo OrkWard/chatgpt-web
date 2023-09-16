@@ -7,10 +7,9 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Root',
     component: () => import('@/views/chat/layout/Layout.vue'),
-    redirect: '/chat',
     children: [
       {
-        path: '/chat/:uuid?',
+        path: '/:uuid?',
         name: 'Chat',
         component: () => import('@/views/chat/index.vue'),
       },

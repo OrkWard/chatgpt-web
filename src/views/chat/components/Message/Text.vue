@@ -110,7 +110,7 @@ onUnmounted(() => {
     <div ref="textRef" class="leading-relaxed break-words">
       <NImage v-if="image" :src="image" class="h-10" />
       <div v-if="!inversion">
-        <div v-if="!asRawText" class="markdown-body" v-html="text" />
+        <div v-if="!asRawText" v-html="text" />
         <div v-else class="whitespace-pre-wrap" v-text="text" />
       </div>
       <div v-else class="whitespace-pre-wrap" v-text="text" />

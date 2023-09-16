@@ -108,7 +108,7 @@ async function onPost() {
   try {
     const modelResp = await fetchModelResp<{ result?: string }>(message)
     if (typeof modelResp.data.result !== 'string')
-      throw new Error('interface error')
+      throw new Error('interface error, 请查看返回值')
 
     updateChat(
       +uuid,
@@ -118,7 +118,7 @@ async function onPost() {
         text: modelResp.data.result,
         inversion: false,
         error: false,
-        loading: true,
+        loading: false,
         requestOptions: { prompt: message.prompt, options: {} },
       },
     )
