@@ -90,6 +90,7 @@ async function onPost() {
 
   loading.value = true
   prompt.value = ''
+  image.value = []
 
   addChat(
     +uuid,
@@ -537,7 +538,7 @@ onUnmounted(() => {
             </div>
           </template>
           <template v-else>
-            <div>
+            <div class="p-2">
               <Message
                 v-for="(item, index) of dataSources"
                 :key="index"
@@ -546,6 +547,7 @@ onUnmounted(() => {
                 :inversion="item.inversion"
                 :error="item.error"
                 :loading="item.loading"
+                :image="item.image"
                 @regenerate="onRegenerate(index)"
                 @delete="handleDelete(index)"
               />

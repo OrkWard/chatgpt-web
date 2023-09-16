@@ -1,7 +1,6 @@
 <script setup lang='ts'>
 import { computed, ref } from 'vue'
 import { NDropdown, useMessage } from 'naive-ui'
-import AvatarComponent from './Avatar.vue'
 import TextComponent from './Text.vue'
 import { SvgIcon } from '@/components/common'
 import { useIconRender } from '@/hooks/useIconRender'
@@ -15,6 +14,7 @@ interface Props {
   inversion?: boolean
   error?: boolean
   loading?: boolean
+  image?: string
 }
 
 interface Emit {
@@ -52,14 +52,6 @@ const options = computed(() => {
     },
   ]
 
-  if (!props.inversion) {
-    common.unshift({
-      label: asRawText.value ? t('chat.preview') : t('chat.showRawText'),
-      key: 'toggleRenderType',
-      icon: iconRender({ icon: asRawText.value ? 'ic:outline-code-off' : 'ic:outline-code' }),
-    })
-  }
-
   return common
 })
 
@@ -74,11 +66,6 @@ function handleSelect(key: 'copyText' | 'delete' | 'toggleRenderType') {
     case 'delete':
       emit('delete')
   }
-}
-
-function handleRegenerate() {
-  messageRef.value?.scrollIntoView()
-  emit('regenerate')
 }
 
 async function handleCopy() {
@@ -98,12 +85,6 @@ async function handleCopy() {
     class="flex w-full mb-6 overflow-hidden"
     :class="[{ 'flex-row-reverse': inversion }]"
   >
-    <div
-      class="flex items-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8"
-      :class="[inversion ? 'ml-2' : 'mr-2']"
-    >
-      <AvatarComponent :image="inversion" />
-    </div>
     <div class="overflow-hidden text-sm " :class="[inversion ? 'items-end' : 'items-start']">
       <p class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
         {{ dateTime }}
@@ -117,17 +98,11 @@ async function handleCopy() {
           :inversion="inversion"
           :error="error"
           :text="text"
+          :image="image"
           :loading="loading"
           :as-raw-text="asRawText"
         />
         <div class="flex flex-col">
-          <button
-            v-if="!inversion"
-            class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
-            @click="handleRegenerate"
-          >
-            <SvgIcon icon="ri:restart-line" />
-          </button>
           <NDropdown
             :trigger="isMobile ? 'click' : 'hover'"
             :placement="!inversion ? 'right' : 'left'"
