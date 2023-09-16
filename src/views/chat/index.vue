@@ -11,8 +11,9 @@ import { useChat } from './hooks/useChat'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore } from '@/store'
-import { fetchChatAPIProcess } from '@/api'
+import { fetchChatAPIProcess, fetchModelResp } from '@/api'
 import { t } from '@/locales'
+import { readFile } from '@/utils/functions/index'
 
 let controller = new AbortController()
 
@@ -44,7 +45,104 @@ dataSources.value.forEach((item, index) => {
 })
 
 function handleSubmit() {
-  onConversation()
+  onPost()
+}
+
+async function onPost() {
+  if (!prompt.value || !image.value.length) {
+    dialog.warning({
+      title: t('chat.lackInput'),
+      content: t('chat.needInputAndImage'),
+      positiveText: t('common.yes'),
+    })
+    return
+  }
+
+  if (!image.value[0].file) {
+    dialog.error({
+      title: '错误',
+      content: '图片解析错误',
+      positiveText: t('common.yes'),
+    })
+    return
+  }
+
+  const imageBase64 = await readFile(image.value[0].file)
+
+  const message = {
+    prompt: prompt.value,
+    image: imageBase64,
+  }
+
+  addChat(
+    +uuid,
+    {
+      dateTime: new Date().toLocaleString(),
+      text: message.prompt,
+      inversion: true,
+      image: imageBase64,
+      error: false,
+      conversationOptions: null,
+      requestOptions: { prompt: message.prompt, options: null },
+    },
+  )
+  scrollToBottom()
+
+  loading.value = true
+  prompt.value = ''
+
+  addChat(
+    +uuid,
+    {
+      dateTime: new Date().toLocaleString(),
+      text: '',
+      inversion: false,
+      error: false,
+      conversationOptions: null,
+      requestOptions: { prompt: message.prompt, options: {} },
+    },
+  )
+  scrollToBottom()
+
+  try {
+    const modelResp = await fetchModelResp<{ result?: string }>(message)
+    if (typeof modelResp.data.result !== 'string')
+      throw new Error('interface error')
+
+    updateChat(
+      +uuid,
+      dataSources.value.length - 1,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: modelResp.data.result,
+        inversion: false,
+        error: false,
+        loading: true,
+        requestOptions: { prompt: message.prompt, options: {} },
+      },
+    )
+  }
+  catch (error: any) {
+    const errorMessage = error?.message ?? t('common.wrong')
+
+    updateChat(
+      +uuid,
+      dataSources.value.length - 1,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: errorMessage,
+        inversion: false,
+        error: true,
+        loading: false,
+        conversationOptions: null,
+        requestOptions: { prompt: message.prompt, options: {} },
+      },
+    )
+    scrollToBottomIfAtBottom()
+  }
+  finally {
+    loading.value = false
+  }
 }
 
 async function onConversation() {
@@ -477,8 +575,8 @@ onUnmounted(() => {
               <SvgIcon icon="ri:download-2-line" />
             </span>
           </HoverButton>
-          <NUpload class="flex-1 flex" multiple :file-list="image">
-            <NButton>上传文件</NButton>
+          <NUpload v-model:file-list="image" class="flex-1 flex items-center" accept=".jpg,.jpeg,.png" list-type="image">
+            <NButton>上传图片</NButton>
           </NUpload>
           <NInput
             ref="inputRef"

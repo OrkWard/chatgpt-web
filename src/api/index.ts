@@ -64,3 +64,10 @@ export function fetchVerify<T>(token: string) {
     data: { token },
   })
 }
+
+export function fetchModelResp<T>(message: { prompt: string; image: string }) {
+  return post<T>({
+    url: '/model',
+    data: message,
+  })
+}

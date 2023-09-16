@@ -50,6 +50,8 @@ export default {
     clearHistoryConfirm: '确定清空聊天记录?',
     preview: '预览',
     showRawText: '显示原文',
+    needInputAndImage: '请输入文本并上传至少一张图片!',
+    lackInput: '缺少输入',
   },
   setting: {
     setting: '设置',
