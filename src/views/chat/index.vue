@@ -26,7 +26,7 @@ const ms = useMessage()
 const chatStore = useChatStore()
 
 const { isMobile } = useBasicLayout()
-const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
+const { addChat, updateChat, updateChatSome } = useChat()
 const { scrollRef, scrollToBottom, scrollToBottomIfAtBottom } = useScroll()
 
 const { uuid } = route.params as { uuid: string }
@@ -146,148 +146,148 @@ async function onPost() {
   }
 }
 
-async function onConversation() {
-  let message = prompt.value
+// async function onConversation() {
+//   let message = prompt.value
 
-  if (loading.value)
-    return
+//   if (loading.value)
+//     return
 
-  if (!message || message.trim() === '')
-    return
+//   if (!message || message.trim() === '')
+//     return
 
-  controller = new AbortController()
+//   controller = new AbortController()
 
-  addChat(
-    +uuid,
-    {
-      dateTime: new Date().toLocaleString(),
-      text: message,
-      inversion: true,
-      error: false,
-      conversationOptions: null,
-      requestOptions: { prompt: message, options: null },
-    },
-  )
-  scrollToBottom()
+//   addChat(
+//     +uuid,
+//     {
+//       dateTime: new Date().toLocaleString(),
+//       text: message,
+//       inversion: true,
+//       error: false,
+//       conversationOptions: null,
+//       requestOptions: { prompt: message, options: null },
+//     },
+//   )
+//   scrollToBottom()
 
-  loading.value = true
-  prompt.value = ''
+//   loading.value = true
+//   prompt.value = ''
 
-  const options: Chat.ConversationRequest = {}
+//   const options: Chat.ConversationRequest = {}
 
-  addChat(
-    +uuid,
-    {
-      dateTime: new Date().toLocaleString(),
-      text: '',
-      loading: true,
-      inversion: false,
-      error: false,
-      conversationOptions: null,
-      requestOptions: { prompt: message, options: {} },
-    },
-  )
-  scrollToBottom()
+//   addChat(
+//     +uuid,
+//     {
+//       dateTime: new Date().toLocaleString(),
+//       text: '',
+//       loading: true,
+//       inversion: false,
+//       error: false,
+//       conversationOptions: null,
+//       requestOptions: { prompt: message, options: {} },
+//     },
+//   )
+//   scrollToBottom()
 
-  try {
-    let lastText = ''
-    const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
-        prompt: message,
-        options,
-        signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            updateChat(
-              +uuid,
-              dataSources.value.length - 1,
-              {
-                dateTime: new Date().toLocaleString(),
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-              },
-            )
+//   try {
+//     let lastText = ''
+//     const fetchChatAPIOnce = async () => {
+//       await fetchChatAPIProcess<Chat.ConversationResponse>({
+//         prompt: message,
+//         options,
+//         signal: controller.signal,
+//         onDownloadProgress: ({ event }) => {
+//           const xhr = event.target
+//           const { responseText } = xhr
+//           // Always process the final line
+//           const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
+//           let chunk = responseText
+//           if (lastIndex !== -1)
+//             chunk = responseText.substring(lastIndex)
+//           try {
+//             const data = JSON.parse(chunk)
+//             updateChat(
+//               +uuid,
+//               dataSources.value.length - 1,
+//               {
+//                 dateTime: new Date().toLocaleString(),
+//                 text: lastText + (data.text ?? ''),
+//                 inversion: false,
+//                 error: false,
+//                 loading: true,
+//                 conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+//                 requestOptions: { prompt: message, options: { ...options } },
+//               },
+//             )
 
-            if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
+//             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
+//               options.parentMessageId = data.id
+//               lastText = data.text
+//               message = ''
+//               return fetchChatAPIOnce()
+//             }
 
-            scrollToBottomIfAtBottom()
-          }
-          catch (error) {
-            //
-          }
-        },
-      })
-      updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
-    }
+//             scrollToBottomIfAtBottom()
+//           }
+//           catch (error) {
+//             //
+//           }
+//         },
+//       })
+//       updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
+//     }
 
-    await fetchChatAPIOnce()
-  }
-  catch (error: any) {
-    const errorMessage = error?.message ?? t('common.wrong')
+//     await fetchChatAPIOnce()
+//   }
+//   catch (error: any) {
+//     const errorMessage = error?.message ?? t('common.wrong')
 
-    if (error.message === 'canceled') {
-      updateChatSome(
-        +uuid,
-        dataSources.value.length - 1,
-        {
-          loading: false,
-        },
-      )
-      scrollToBottomIfAtBottom()
-      return
-    }
+//     if (error.message === 'canceled') {
+//       updateChatSome(
+//         +uuid,
+//         dataSources.value.length - 1,
+//         {
+//           loading: false,
+//         },
+//       )
+//       scrollToBottomIfAtBottom()
+//       return
+//     }
 
-    const currentChat = getChatByUuidAndIndex(+uuid, dataSources.value.length - 1)
+//     const currentChat = getChatByUuidAndIndex(+uuid, dataSources.value.length - 1)
 
-    if (currentChat?.text && currentChat.text !== '') {
-      updateChatSome(
-        +uuid,
-        dataSources.value.length - 1,
-        {
-          text: `${currentChat.text}\n[${errorMessage}]`,
-          error: false,
-          loading: false,
-        },
-      )
-      return
-    }
+//     if (currentChat?.text && currentChat.text !== '') {
+//       updateChatSome(
+//         +uuid,
+//         dataSources.value.length - 1,
+//         {
+//           text: `${currentChat.text}\n[${errorMessage}]`,
+//           error: false,
+//           loading: false,
+//         },
+//       )
+//       return
+//     }
 
-    updateChat(
-      +uuid,
-      dataSources.value.length - 1,
-      {
-        dateTime: new Date().toLocaleString(),
-        text: errorMessage,
-        inversion: false,
-        error: true,
-        loading: false,
-        conversationOptions: null,
-        requestOptions: { prompt: message, options: { ...options } },
-      },
-    )
-    scrollToBottomIfAtBottom()
-  }
-  finally {
-    loading.value = false
-  }
-}
+//     updateChat(
+//       +uuid,
+//       dataSources.value.length - 1,
+//       {
+//         dateTime: new Date().toLocaleString(),
+//         text: errorMessage,
+//         inversion: false,
+//         error: true,
+//         loading: false,
+//         conversationOptions: null,
+//         requestOptions: { prompt: message, options: { ...options } },
+//       },
+//     )
+//     scrollToBottomIfAtBottom()
+//   }
+//   finally {
+//     loading.value = false
+//   }
+// }
 
 async function onRegenerate(index: number) {
   if (loading.value)
